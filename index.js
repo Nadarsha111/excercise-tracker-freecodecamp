@@ -34,7 +34,10 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
-app.post('/api/users',async(req,res)=>{
+
+
+app.route('/api/users')
+.post(async(req,res)=>{
   const userObj = new User({
     username : req.body.username,
   })
@@ -45,6 +48,17 @@ try {
   console.log(error)
 }
 })
+.get(async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.json(users);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+
+
 
 app.post('/api/users/:_id/exercises',async(req,res)=>{
   const id=req.params._id;
