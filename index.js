@@ -71,23 +71,25 @@ app.post('/api/users/:_id/exercises',async(req,res)=>{
       res.send("The user id doesn't exist")
     }
     else{
+      
       const excerciseObj = new Exercise({
       user_id:user._id,
       username:user.username,
       description,
       duration,
-      date:date?new Date(date):new Date
+      date:date?new Date(date).toDateString():new Date().toDateString()
       })
       const excercise=await excerciseObj.save();
-      res.json({
-        
-        _id: excercise.user_id,
-          username: excercise.username,
-          date: excercise.date,
-          duration: 60,
-          description: "test",
-        
-      })
+      const response = {
+        _id: user._id,
+        username: user.username,
+        description: exercise.description,
+        duration: exercise.duration,
+        date: exercise.date
+      };
+      res.json(response);
+      
+      
     }
 
   } catch (error) {
@@ -97,6 +99,10 @@ app.post('/api/users/:_id/exercises',async(req,res)=>{
 
 })
 
+///logs
+app.get('/api/users/:_id/logs',(req,res)=>{
+
+})
 
 
 
