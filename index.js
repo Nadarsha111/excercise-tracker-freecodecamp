@@ -13,7 +13,7 @@ const UserSchema = new Schema({
 const User =mongoose.model("User",UserSchema);
 
 const ExerciseSchema = new Schema({
-  _id: {type:String,required:true},
+  user_id: {type:String,required:true},
   username: String,
   description: String,
   duration: Number,
@@ -62,7 +62,7 @@ try {
 
 app.post('/api/users/:_id/exercises',async(req,res)=>{
   const id=req.params._id;
-    const {description,duration,date}=req.body;
+  const {description,duration,date = new Date()}=req.body;
 
   try {
     const user =await User.findById(id);
@@ -72,26 +72,27 @@ app.post('/api/users/:_id/exercises',async(req,res)=>{
     }
     else{
       const excerciseObj = new Exercise({
-
       user_id:user._id,
       username:user.username,
       description,
       duration,
-      date
+      date:date?new Date(date):new Date
       })
       const excercise=await excerciseObj.save();
       res.json({
-        _id:user_id,
-        username:user.username,
-        duration:excercise.duration,
-        description:excercise.description
-
+        
+        _id: excercise.user_id,
+          username: excercise.username,
+          date: excercise.date,
+          duration: 60,
+          description: "test",
+        
       })
     }
 
   } catch (error) {
     console.error(error)
-    res.send("Their Was an Error While Saving")
+    res.send(error)
   }
 
 })
