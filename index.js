@@ -58,51 +58,88 @@ try {
 });
 
 
-
-
-app.post('/api/users/:_id/exercises',async(req,res)=>{
-  const id=req.params._id;
-  const {description,duration,date = new Date()}=req.body;
+app.post('/api/users/:_id/exercises', async (req, res) => {
+  const id = req.params._id;
+  const { description, duration, date = new Date() } = req.body;
 
   try {
-    const user =await User.findById(id);
-    console.log("Found User",user);
-    if(!user){
-      res.send("The user id doesn't exist")
-    }
-    else{
-      
-      const excerciseObj = new Exercise({
-      user_id:user._id,
-      username:user.username,
-      description,
-      duration,
-      date:date?new Date(date).toDateString():new Date().toDateString()
-      })
-      const excercise=await excerciseObj.save();
-      const response = {
-        _id: user._id,
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).send("The user id doesn't exist");
+    } else {
+      const exerciseObj = new Exercise({
+        user_id: user._id,
         username: user.username,
+        description,
+        duration,
+        date: date ? new Date(date).toDateString() : new Date().toDateString()
+      });
+      const exercise = await exerciseObj.save();
+      
+      const response = {
+        _id: exercise.user_id,
+        username: exercise.username, 
         description: exercise.description,
         duration: exercise.duration,
-        date: exercise.date
+        date: new Date(exercise.date).toDateString()
       };
       res.json(response);
-      
-      
     }
-
   } catch (error) {
-    console.error(error)
-    res.send(error)
+    console.error(error);
+    res.status(500).send("There was an error while saving");
   }
+});
 
-})
+
+
 
 ///logs
-app.get('/api/users/:_id/logs',(req,res)=>{
+app.get('/api/users/:_id/logs', async (req, res) => {
+  const id = req.params._id;
+  const { from, to, limit } = req.query;
 
-})
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).send("The user id doesn't exist");
+    } else {
+      let logs = await Exercise.find({ user_id: id });
+
+      // Map exercises to logs with formatted date
+      logs = logs.map((exercise) => ({
+        description: exercise.description,
+        duration: exercise.duration,
+        date: new Date(exercise.date).toDateString(),
+      }));
+
+      // Filter logs by date if from and/or to parameters are provided
+      if (from || to) {
+        logs = logs.filter((log) => {
+          const itemDate = new Date(log.date);
+          return (!from || itemDate >= new Date(from)) &&
+                 (!to || itemDate <= new Date(to));
+        });
+      }
+
+      // Apply limit if provided
+      if (limit) {
+        logs = logs.slice(0, limit);
+      }
+
+      res.json({
+        username: user.username,
+        count: logs.length,
+        _id: user._id,
+        log: logs,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 
 
